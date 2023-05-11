@@ -2,24 +2,42 @@
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 const pathToFile = path.join(__dirname, 'text.txt');
-const { stdin, stdout } = require('process');
 
-const writeStream = new fs.createWriteStream(pathToFile);
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-stdout.write('Напиши своё самое сильное желание\n');
+readline.emitKeypressEvents(process.stdin);
 
-stdin.on('data', (chank) => {
-  if (chank.toString().trim().toLowerCase() === 'exit') {
-    process.exit();
-  } else {
-    writeStream.write(chank);
+process.stdin.on('keypress', (ch, key) => {
+  if(key && key.ctrl && key.name === 'c'){
+    console.log('Удачи')
   }
 });
 
-process.on('exit', () => {
-  stdout.write('Всё сбудится. Пока\n');
-});
-process.on('SIGINT', () => {
-  process.exit();
-});
+const writeStream = fs.createWriteStream(pathToFile);
+
+function write() {
+  rl.question('Если ты видишь этот текст, то наиши - ', text => {
+    console.log(text);
+    if(text.toLocaleLowerCase() === 'exit'){
+      console.log('\nУдачи!');
+      rl.close();
+      return;
+    }
+    writeStream.write(text + '\n', err => {
+      if(err){
+        console.log(err.message);
+      } else {
+        write();
+      }
+    });
+  });
+}
+
+write();
+
+
