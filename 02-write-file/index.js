@@ -4,40 +4,30 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const pathToFile = path.join(__dirname, 'text.txt');
+const { stdout } = require('process');
+const rl = readline.createInterface(process.stdin, process.stdout);
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+stdout.write('Привет. Введи текст: ')
 
-readline.emitKeypressEvents(process.stdin);
-
-process.stdin.on('keypress', (ch, key) => {
-  if(key && key.ctrl && key.name === 'c'){
-    console.log('Удачи')
-  }
-});
-
-const writeStream = fs.createWriteStream(pathToFile);
-
-function write() {
-  rl.question('Если ты видишь этот текст, то наиши - ', text => {
-    console.log(text);
-    if(text.toLocaleLowerCase() === 'exit'){
-      console.log('\nУдачи!');
-      rl.close();
-      return;
-    }
-    writeStream.write(text + '\n', err => {
+rl.on('line', input => {
+  if (input.toLowerCase() === 'exit') {
+    console.log('\n Ввод: exit');
+    rl.close();
+  } else {
+    fs.appendFile(pathToFile, input + '\n', (err) => {
       if(err){
         console.log(err.message);
       } else {
-        write();
+        console.log('Текст записан. Для выхода введи "exit" или нажми Ctrl + C. Ну или напиши ещё: ')
       }
-    });
-  });
-}
+    })
+  }
+});
 
-write();
+process.on('exit', () => stdout.write('Уважаю ваше решение. Всего хорошего'));
+
+process.on('SIGINT', () => { 
+  stdout.write('exit');
+});
 
 
